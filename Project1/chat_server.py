@@ -79,8 +79,8 @@ class ChatServer():
                 message_payload = raw_input("{}> ".format(username))
                 # Transmit the server-side message to the chat client
             if message_payload == "\quit":
-                print "Connection closed"
-                print "Waiting for new connection"
+                print "Connection closed for user {0}".format(clientname)
+                print "Waiting for new incoming client connection(s)"
                 break
             connect_sock.send(message_payload)
 
