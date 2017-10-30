@@ -46,6 +46,7 @@ class ChatServer():
 
         self._grab_username()
 
+        print "Server started and is waiting for incoming client connection(s)"
         while 1:
             connect_sock, addr = server_socket.accept()
             # Output that a connection request occured
