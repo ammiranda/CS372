@@ -14,4 +14,8 @@ Starting the client:
     Please enter a username of 10 characters or less: <CLIENT_USER_NAME>
     <CLIENT_USER_NAME>> <Initial chat message to server>
 
+Once the client is running the chat server and chat client can send alternating messages to each other.
 
+Either the server or client can type '\quit' to close the connected client connection.
+
+The server will then wait for another client to connect until a SIGINT signal is intercepted.
