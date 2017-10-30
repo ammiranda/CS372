@@ -19,3 +19,5 @@ Once the client is running the chat server and chat client can send alternating 
 Either the server or client can type '\quit' to close the connected client connection.
 
 The server will then wait for another client to connect until a SIGINT signal is intercepted.
+
+The client and server code were tested on flip1.engr.oregonstate.edu
