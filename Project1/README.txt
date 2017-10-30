@@ -11,4 +11,7 @@ Starting the client:
 
     make
     ./chat_server <HOST_NAME/IP> <PORT_NUMBER>
-    
+    Please enter a username of 10 characters or less: <CLIENT_USER_NAME>
+    <CLIENT_USER_NAME>> <Initial chat message to server>
+
+
