@@ -37,7 +37,7 @@ struct addrinfo * generateAddressPtr(char * inputtedAddress, char * portNum) {
     data = getaddrinfo(inputtedAddress, portNum, &hints, &res);
 
     if (data != 0) {
-        fprintf(stderr, "Error getaddrinfo: %s\nEnter the correct host/port!\n", gai_strerror(status));
+        fprintf(stderr, "Error getaddrinfo: %s\nEnter the correct host/port!\n", gai_strerror(data));
         exit(1);
     }
 
