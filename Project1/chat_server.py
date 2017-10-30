@@ -68,8 +68,8 @@ class ChatServer():
         while 1:
             received = connect_sock.recv(MAX_MESSAGE_LENGTH)[0:-1]
             if received == "":
-                print "Connection closed"
-                print "Waiting for new connection"
+                print "Connection closed for user {0}".format(clientname)
+                print "Waiting for new incoming client connection(s)"
                 break
             # Output the clientname to the serverside user
             print "{0}> {1}".format(clientname, received)
