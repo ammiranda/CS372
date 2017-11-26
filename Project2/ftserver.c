@@ -271,6 +271,19 @@ void transmit_message(int sock_num, char * data) {
 }
 
 /**
+ * Sends a file with the passed in file name to the client.
+ * 
+ * socket_file_des: {Integer} - Integer representing the socket file description
+ * file_name: {Char *} - File name of the file that is transmitted to the client
+*/
+void send_file(int socket_file_des, char * file_name) {
+    char * file_to_send = read_file(file_name);
+
+    transmit_number(socket_file_des, strlen(file_to_send));
+    transmit_message(socket_file_des, file_to_send);
+}
+
+/**
  * Main method for the ftserver that parses the command-line arguments
  * to properly configure the server socket.
  * 
@@ -281,5 +294,51 @@ void transmit_message(int sock_num, char * data) {
  * 
 */
 int main(int argc, char *argv[]) {
+    // Declaring necessary variables
+    int socket_file_des;
+    int new_socket_file_des;
+    int data_socket_file_des;
+    int port_num;
+    int process_id;
 
+    // Checking that the necessary args were passed to the
+    // executable
+    if (argc < 2) {
+        error("Usage: ftserver <port_num>\n");
+        exit(1);
+    }
+
+    // Casting the port_num passed in to be an integer
+    port_num = atoi(argv[1]);
+
+    if (port_num < MIN_PORT || port_num > MAX_PORT) {
+        error("Port number selected is outside the desired range\n");
+    }
+
+    socket_file_des = initialize_server(port_num);
+    printf("Server open and listening on %d\n", port_num);
+
+    while(1) {
+        new_socket_file_des = accept(socket_file_des, NULL, NULL);
+
+        if (new_socket_file_des < 0) {
+            error("Error on accept\n");
+        }
+
+        process_id = fork();
+
+        if (process_id < 0) {
+            error("Could not fork the process properly\n");
+        }
+
+        if (process_id == 0) {
+            close(socket_file_des);
+
+            int cmd = 0;
+            int data_port;
+            int new_socket;
+
+            
+        }
+    }
 }
