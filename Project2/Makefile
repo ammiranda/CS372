@@ -5,3 +5,4 @@ all:
 
 clean:
 	rm -rf ftserver
+	rm -rf *_copy.txt

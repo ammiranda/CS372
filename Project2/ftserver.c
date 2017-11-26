@@ -13,6 +13,10 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <dirent.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
 
 // Constants that specify the lower and upper bounds for which port 
 // the server process can listen to when running
@@ -21,10 +25,10 @@ int const MAX_PORT = 65535;
 char * const WORKING_DIR = ".";
 
 /**
- * Method that will output an error message to the stderr of the server process
+ * Method that will output an  message to the stderr of the server process
  * Partially inspired by: http://www.linuxhowtos.org/C_C++/socket.htm
  * 
- * err_text: {Char *} The error message that will be outputted to the console
+ * err_text: {Char *} The  message that will be outputted to the console
 */
 void err_output(char * err_text) {
     perror(err_text);
@@ -59,13 +63,13 @@ int initialize_server(int port_num) {
     int bind_status = bind(socket_file_des, (struct sockaddr *) &server_obj, sizeof(server_obj));
 
     if (bind_status < 0) {
-        error("Could not bind to specified port");
+        err_output("Could not bind to specified port");
     }
 
     int listen_status = listen(socket_file_des, 10);
 
     if (listen_status < 0) {
-        error("Could not listen to the specified port");
+        err_output("Could not listen to the specified port");
     }
 
     return socket_file_des;
@@ -91,7 +95,7 @@ void read_message(int socket_file_des, char * data, size_t size) {
         data_read += chunk_tracker;
 
         if (chunk_tracker < 0) {
-            error("Error retrieving the message!");
+            err_output("Error retrieving the message!");
             exit(1);
         }
     }
@@ -143,7 +147,7 @@ char * read_file(char * file_name) {
     FILE * file_ptr = fopen(file_name, "r");
 
     if (file_ptr == NULL) {
-        error("Could not open file");
+        err_output("Could not open file");
     }
 
     if (file_ptr != NULL) {
@@ -151,14 +155,14 @@ char * read_file(char * file_name) {
             long buffer_size = ftell(file_ptr);
 
             if (buffer_size == -1) {
-                error("Invalid file!");
+                err_output("Invalid file!");
                 exit(1);
             }
 
             src = malloc(sizeof(char) * (buffer_size + 1));
 
             if (fseek(file_ptr, 0L, SEEK_SET) != 0) {
-                error("Unable to read file");
+                err_output("Unable to read file");
             }
 
             size_t file_length = fread(src, sizeof(char), buffer_size, file_ptr);
@@ -192,7 +196,7 @@ int get_number(int socket_file_des) {
     file_chunk = read(socket_file_des, &passed_num, sizeof(int));
 
     if (file_chunk < 0) {
-        error("Unable to retrieve the number passed into the socket.");
+        err_output("Unable to retrieve the number passed into the socket.");
     }
 
     return passed_num;
@@ -210,7 +214,7 @@ void transmit_number(int socket_file_des, int passed_num) {
     file_chunk = write(socket_file_des, &passed_num, sizeof(int));
 
     if (file_chunk < 0) {
-        error("Unable to send number through socket.");
+        err_output("Unable to send number through socket.");
     }
 }
 
@@ -228,7 +232,7 @@ void transmit_number(int socket_file_des, int passed_num) {
  *  one of the files in the server's directory
 */
 int request_handler(int socket_file_des, int * data_port) {
-    char user_input[3] = '\0';
+    char user_input[3] = "\0";
 
     read_message(socket_file_des, user_input, 3);
     *data_port = get_number(socket_file_des);
@@ -262,7 +266,7 @@ void transmit_message(int sock_num, char * data) {
         data_sent += chunk_tracker;
 
         if (chunk_tracker < 0) {
-            error("Error when sending message data");
+            err_output("Error when sending message data");
             exit(1);
         } else if (chunk_tracker == 0) {
             data_sent = size - data_sent;
@@ -281,6 +285,10 @@ void send_file(int socket_file_des, char * file_name) {
 
     transmit_number(socket_file_des, strlen(file_to_send));
     transmit_message(socket_file_des, file_to_send);
+}
+
+void list_directory() {
+
 }
 
 /**
@@ -304,7 +312,7 @@ int main(int argc, char *argv[]) {
     // Checking that the necessary args were passed to the
     // executable
     if (argc < 2) {
-        error("Usage: ftserver <port_num>\n");
+        err_output("Usage: ftserver <port_num>\n");
         exit(1);
     }
 
@@ -312,7 +320,7 @@ int main(int argc, char *argv[]) {
     port_num = atoi(argv[1]);
 
     if (port_num < MIN_PORT || port_num > MAX_PORT) {
-        error("Port number selected is outside the desired range\n");
+        err_output("Port number selected is outside the desired range\n");
     }
 
     socket_file_des = initialize_server(port_num);
@@ -322,13 +330,13 @@ int main(int argc, char *argv[]) {
         new_socket_file_des = accept(socket_file_des, NULL, NULL);
 
         if (new_socket_file_des < 0) {
-            error("Error on accept\n");
+            err_output("Error on accept\n");
         }
 
         process_id = fork();
 
         if (process_id < 0) {
-            error("Could not fork the process properly\n");
+            err_output("Could not fork the process properly\n");
         }
 
         if (process_id == 0) {
@@ -338,7 +346,77 @@ int main(int argc, char *argv[]) {
             int data_port;
             int new_socket;
 
-            
+            printf("Control connection started on port %d.\n", port_num);
+            cmd = request_handler(new_socket_file_des, &data_port);
+
+            if (cmd == 0) {
+                err_output("Request did not specify -l or -g");
+            }
+
+            if (cmd == 1) {
+                char * file_path[100];
+                int file_length = 0;
+                int i = 0;
+
+                printf("List directory requested on port %d.\n", data_port);
+                file_length = grab_dir(file_path);
+
+                new_socket = initialize_server(data_port);
+                data_socket_file_des = accept(new_socket, NULL, NULL);
+
+                if (data_socket_file_des < 0) {
+                    err_output("Unable to open data socket");
+                }
+
+                transmit_number(data_socket_file_des, file_length);
+
+                while (file_path[i] != NULL) {
+                    transmit_message(data_socket_file_des, file_path[i]);
+                    i++;
+                }
+
+                close(new_socket);
+                close(data_socket_file_des);
+                exit(0);
+            } else if (cmd == 2) {
+                int k = get_number(new_socket_file_des);
+                char file_name[255] = "\0";
+
+                read_message(new_socket_file_des, file_name, k);
+                printf("File \"%s\" requested on port %d\n", file_name, data_port);
+
+                if (access(file_name, F_OK) == -1) {
+                    printf("File not found. Sending error message on port %d\n", port_num);
+                    char err_msg[] = "FILE NOT FOUND!";
+
+                    transmit_number(new_socket_file_des, strlen(err_msg));
+                    transmit_message(new_socket_file_des, err_msg);
+
+                    close(new_socket);
+                    close(data_socket_file_des);
+                    exit(1);
+                } else {
+                    char msg[] = "FILE FOUND!";
+                    transmit_number(new_socket_file_des, strlen(msg));
+                    transmit_message(new_socket_file_des, msg);
+
+                    printf("Sending \"%s\" on port %d\n", file_name, data_port);
+
+                    new_socket = initialize_server(data_port);
+                    data_socket_file_des = accept(new_socket, NULL, NULL);
+
+                    if (data_socket_file_des < 0) {
+                        err_output("Cannot open data socket");
+                    }
+
+                    send_file(data_socket_file_des, file_name);
+                    close(new_socket);
+                    close(data_socket_file_des);
+                    exit(0);
+                }
+            }
+
+            exit(0);
         }
     }
 }
