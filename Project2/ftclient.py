@@ -116,12 +116,13 @@ def get_file(connect, file_name):
     connect - {String} The unix file descriptor for the socket connection
     file_name - {String} The name of the file requested that exists on the server
     """
+    buf = get_message(connect)
     if path.isfile(file_name):
         file_name = file_name.split(".")[0] + "_copy.txt"
 
     with open(file_name, 'w') as f_ptr:
-        f_ptr.write(buffer)
-
+        f_ptr.write(buf)
+        
 
 if __name__ == "__main__":
     """
