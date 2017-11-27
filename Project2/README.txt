@@ -19,6 +19,8 @@ Each secondary bullet point are their own arguments to the following command:
 The ftclient will stop after either the directory data is displayed or the file transfer completes or errors.
 The ftserver will run continually until a SIGINT is sent to the server process.
 
+The ftclient and ftserver code were tested on os1.engr.oregonstate.edu and flip1.engr.oregonstate.edu.
+
 In order to clean the existing server executable and delete text file copies run:
 
 * make clean
