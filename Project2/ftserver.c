@@ -375,6 +375,8 @@ int main(int argc, char *argv[]) {
                     i++;
                 }
 
+                printf("Sending directory contents to ")
+
                 close(new_socket);
                 close(data_socket_file_des);
                 exit(0);
